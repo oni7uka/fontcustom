@@ -4,10 +4,11 @@ module Fontcustom
   class Base
     include Utility
 
-    def initialize(raw_options)
+    def initialize(raw_options,glyphs={})
       check_fontforge
       manifest = ".fontcustom-manifest.json"
       raw_options[:manifest] = manifest
+      @glyphs = glyphs
       @options = Fontcustom::Options.new(raw_options).options
       @manifest = Fontcustom::Manifest.new(manifest, @options)
     end
@@ -22,8 +23,10 @@ module Fontcustom
         start_generators
         @manifest.reload
         @manifest.set :checksum, {:previous => current, :current => current}
+        true
       else
         say_message :status, "No changes detected. Skipping compile."
+        false
       end
     end
 
@@ -47,7 +50,7 @@ module Fontcustom
     end
 
     def start_generators
-      Fontcustom::Generator::Font.new(@manifest.manifest).generate
+      Fontcustom::Generator::Font.new(@manifest.manifest,@glyphs).generate
       Fontcustom::Generator::Template.new(@manifest.manifest).generate
     end
   end
